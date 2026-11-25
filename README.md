@@ -1,6 +1,6 @@
 # Implementing Convolutional Neural Network Inference Through a 4×4 Systolic Array
 
-EE224 Digital Systems — Course Project, Semester 1, 2026–2027.
+EE224 Digital Systems — Course Project, Semester 3, 2026–2027.
 
 This project implements a signed multiply-and-accumulate processing element and connects sixteen instances into a structural 4×4 systolic array. The array is used for matrix multiplication and for the convolutional and fully connected layers of an MNIST classifier. The [project report](report/Project%20Report%20-%20Ayush%20Agrawal%20-%20Rajveer%20Singh%20Choudhary%20-%20Atharva%20Airen.pdf) contains the derivations, numerical results, simulation waveforms, and source listings.
 
@@ -67,31 +67,30 @@ Keras weights and biases are extracted with `get_weights()`. Convolution kernels
 
 Activations are scaled by 64 and weights by 128, then rounded and clipped to signed 8-bit values. Biases are scaled by 8192 to match the activation–weight products. The array accumulates products in 24-bit registers; the testbench adds biases using 32-bit integers. After each convolution and Dense1, an arithmetic right shift by seven restores the activation scale, and clipping to [0,127] applies ReLU and saturation. The final class is selected by the largest Dense2 logit.
 
-| Layer | Input matrix | Weight matrix | Output tiles per image |
+The notebook prepares input matrices for all 100 images together. Each hidden-layer input is obtained by adding the preceding layer's bias, requantizing, applying ReLU, and pooling or flattening as required. The batch testbench loads these prepared matrices, executes all four products on the array, and compares every result with its golden value. It retains the simulated Dense2 outputs, adds the final biases, and selects the predicted digit by argmax.
+
+| Layer | Batch input matrix | Padded weight matrix | Output tiles |
 |---|---|---|---:|
-| Conv1 | 676×9 | 9×5 | 338 |
-| Conv2 | 121×45 | 45×10 | 93 |
-| Dense1 | 1×250 | 250×128 | 32 |
-| Dense2 | 1×128 | 128×10 | 3 |
+| Conv1 | 67,600×9 | 9×8 | 33,800 |
+| Conv2 | 12,100×45 | 45×12 | 9,075 |
+| Dense1 | 100×250 | 250×128 | 800 |
+| Dense2 | 100×128 | 128×12 | 75 |
 
-Each multiplication is divided into 4×4 output tiles. The driver streams all K terms for each tile, fills unused boundary lanes with zeros, and resets the accumulators before the next tile. Bias addition, activation, pooling, flattening, and classification are performed in the testbench. The per-image CNN testbench constructs subsequent layers from DUT results and uses exported reference matrices only for comparison.
+The 19 matching integer export files used by the recorded run are included in `testdata/cnn/`. The manifest records the source commit, original and normalized file hashes, dimensions, and expected results. Only Windows line endings were normalized; all integer values are unchanged. The restored `tb_cnn.sv` retains the teammate's batch schedule and classification procedure, with portable file paths, input checks, and nonzero failure exits.
 
-### Recorded CNN results
+### Verified CNN results
 
-The report includes a completed ModelSim run on 100 MNIST test images, with ten images from each digit class.
+The submitted testbench and frozen export reproduce the ModelSim summary in the report:
 
-| Quantity | ModelSim result |
+| Quantity | Result |
 |---|---:|
+| Images evaluated | 100, ten per digit |
 | Classification accuracy | 99/100 (99%) |
-| Matrix-product mismatches against NumPy | 0 |
-| Agreement with the corresponding NumPy integer model | 100/100 |
-| Total reported clock cycles, all layers | 1,228,425 |
+| Matrix-product mismatches | 0 across 700,000 stored entries |
+| Agreement with the matching NumPy predictions | 100/100 |
+| Reported cycle count | 1,228,425 |
 
-These measurements belong to the batched `tb_cnn` run shown in the report. Its cycle count includes one reset cycle per output tile and differs from the per-image schedule of `tb_cnn_inference.sv`. The older notebook output records 98/100 for a separate integer-inference run; it should not be treated as the NumPy reference for the 99/100 ModelSim experiment.
-
-### Current verification status
-
-The PE and array testbenches pass, and all three testbench tops compile. The current per-image CNN testbench has an end-of-file handling issue under Icarus Verilog 12: `close_data` treats a return value of zero after trailing whitespace as an input error, even when the file has ended normally. This check must be corrected before using that bench for a full CNN run. The issue is separate from the completed batched ModelSim run documented above.
+The cycle counter includes K+6 active edges and one reset edge for each tile; additional sampling/setup edges are not counted. The training curves describe the saved notebook training run. The frozen integer export comes from a separate training run of the same architecture, and its corresponding NumPy predictions also achieve 99/100.
 
 ## Source files
 
@@ -108,7 +107,11 @@ verilog/
         systolic_test_driver.sv
         tb_processing_element.sv
         tb_systolic_array.sv
-        tb_cnn_inference.sv
+        tb_cnn.sv
+testdata/
+    cnn/
+        manifest.json
+        *.txt
 report/
     Project Report - Ayush Agrawal - Rajveer Singh Choudhary - Atharva Airen.pdf
 ```
@@ -117,9 +120,7 @@ report/
 
 ## Running the implementation
 
-The Keras notebook requires TensorFlow, NumPy, Matplotlib, and a notebook environment. Run its first three cells in order to train, quantize, and export a consistent set of inputs and references. With `python/` as the notebook working directory, the files are written to `python/modelsim_data/`. The alternate PyTorch implementation requires PyTorch, torchvision, and Matplotlib.
-
-With Icarus Verilog installed, run the PE and array checks from the repository root:
+The hardware checks require Icarus Verilog (`iverilog` and `vvp`). Run from the repository root:
 
 ```sh
 mkdir -p build
@@ -127,12 +128,21 @@ iverilog -g2012 -Wall -s tb_processing_element -o build/pe.vvp verilog/processin
 vvp build/pe.vvp +VCD
 iverilog -g2012 -Wall -s tb_systolic_array -o build/array.vvp verilog/processing_element.v verilog/systolic_array.v verilog/tb/systolic_test_driver.sv verilog/tb/tb_systolic_array.sv
 vvp build/array.vvp +VCD
+iverilog -g2012 -Wall -s tb_cnn -o build/cnn.vvp verilog/processing_element.v verilog/systolic_array.v verilog/tb/tb_cnn.sv
+vvp build/cnn.vvp
 ```
 
-The benches stop on a mismatch and print PASS messages on success. `+VCD` enables waveform recording. To compile the per-image CNN bench:
+All three benches print PASS on success and exit with an error on invalid data or a failed comparison. CNN inference uses `testdata/cnn/` by default, so no Python installation or retraining is required to reproduce the fixed test. `+DATA_DIR=/path/to/export` selects another export directory. `+VCD` enables optional waveform recording; CNN traces can be large.
 
-```sh
-iverilog -g2012 -Wall -s tb_cnn_inference -o build/cnn.vvp verilog/processing_element.v verilog/systolic_array.v verilog/tb/systolic_test_driver.sv verilog/tb/tb_cnn_inference.sv
+For ModelSim/Questa:
+
+```tcl
+vlib work
+vlog verilog/processing_element.v verilog/systolic_array.v
+vlog -sv verilog/tb/systolic_test_driver.sv verilog/tb/tb_processing_element.sv verilog/tb/tb_systolic_array.sv verilog/tb/tb_cnn.sv
+vsim -c work.tb_processing_element -do "run -all; quit -f"
+vsim -c work.tb_systolic_array -do "run -all; quit -f"
+vsim -c work.tb_cnn -do "run -all; quit -f"
 ```
 
-Once the EOF check has been corrected and the notebook exports are available, the runtime accepts `+DATA_DIR=python/modelsim_data`. All images, weights, biases, labels, reference predictions, and golden matrices must come from the same export.
+To train and export a new model, run the three cells in `python/cnn_part1.ipynb` in order with TensorFlow, NumPy, Matplotlib, and a notebook environment. The export is written to `modelsim_data/` relative to the notebook working directory. A new stochastic training run can produce a different accuracy; its matrices, biases, labels, and predictions must be used together. The separate PyTorch implementation requires PyTorch, torchvision, and Matplotlib.

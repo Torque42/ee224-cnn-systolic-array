@@ -1,0 +1,77 @@
+{
+  "source_commit": "4fece52a6bebe9332cbd6f6c7d50e919dbf8f9fe",
+  "source_archive": "project.zip",
+  "source_testbench": "project/systolic_array/Testbench2.v",
+  "source_testbench_sha256": "475b2747aaa41513c6d4e867ad31c1db5c3a3e3ad1bea9ea446f97fc7d06b985",
+  "sample_count": 100,
+  "samples_per_digit": 10,
+  "expected_correct": 99,
+  "expected_matrix_mismatches": 0,
+  "expected_reference_agreement": 100,
+  "expected_reported_cycles": 1228425,
+  "matrix_shapes": {
+    "conv1": [
+      67600,
+      9,
+      8
+    ],
+    "conv2": [
+      12100,
+      45,
+      12
+    ],
+    "dense1": [
+      100,
+      250,
+      128
+    ],
+    "dense2": [
+      100,
+      128,
+      12
+    ]
+  },
+  "sha256": {
+    "b_dense2.txt": "a7318256b45b43edc095fde655e11b89a9323f3e92c30ad12dce2c7b0da82933",
+    "conv1_A.txt": "0d7096bfbc32fcf6a404713bde68973067c7769ca6327188377b26b80e0f1004",
+    "conv1_B.txt": "4779a2830c86754fe6d0e3345c18f9098b7322752cf1be171a95c49f3ea63a8b",
+    "conv1_dims.txt": "241ebc2c595a8815f6db85a75770f2d0d563048efdcad9264f53cfcc47f0a47d",
+    "conv1_golden.txt": "68fc68873a7283a3977130ad1a6b32a5508ae452539f08ff814ecf2029f5fb5d",
+    "conv2_A.txt": "40b1c7d017e173b790989b5fde630cc32ecef72d9de6caccf4fa5fc2ce0a6026",
+    "conv2_B.txt": "219cebf69341a258f50d5014a315268884eccd42b4313dffb265c3e107436906",
+    "conv2_dims.txt": "6eb7648fafa3edde2eb6b3d94325f49c2309613395c2297369a48098637d6560",
+    "conv2_golden.txt": "661fb369346c2f05817bb5735fa789db28933a2124e95e4b3f4789ff84ba3cde",
+    "dense1_A.txt": "4304d6329afe4243d68e1782bdf4a090477c00c8ff336782dd109ccac23dc01e",
+    "dense1_B.txt": "94d5eacde28f96788396a51f80b54a0c4593e47e72e9693a9bfec1f4b77af73e",
+    "dense1_dims.txt": "72bb76eda98499dcf5b761dc787362b77f165e838b8a9af8412b9aed142d32f1",
+    "dense1_golden.txt": "23b9dd9e3244688597d81d3ae6a76849104f84a04c56615b9b6c946a2dc5fc26",
+    "dense2_A.txt": "43f30691bafe37477b46c5ab6a6ddc6c821f61252f4c656d53bbdbe4fe7811f9",
+    "dense2_B.txt": "29c9d828b714c9a0c5cef1889515b233d82c8de619c92830c03f81b3de0e3cab",
+    "dense2_dims.txt": "12db71796632c7c1ded5c447069347020ef9c454910beea960a8a73f1a15b8d2",
+    "dense2_golden.txt": "aeda595579143d4ab22b1d4da4efa20c0e11188b115d6559d5943beb01d603a7",
+    "expected_pred_100.txt": "c23173b84af694481472bde7d5116a72c8c3077e476b06ff26262de356de97e9",
+    "test_labels_100.txt": "bb6e33a3ac13276b10802015bdd9b01910733d86091c1c534dcb41e7020ceb0e"
+  },
+  "source_sha256": {
+    "b_dense2.txt": "2e6b4cd973718f10fe4d22c3d5a3b62fdb41e91b76e89e29e0352d2f89261b39",
+    "conv1_A.txt": "b31b9e54926cda95d1d4b02242c29a8cbda926b41c0a4b977f0fea4b9b941a10",
+    "conv1_B.txt": "0713b77e161c76419f475c3d4caabe380c323a41882ae8ec9dfc456b2ae744aa",
+    "conv1_dims.txt": "1a2b44761e29752c5c408eafc271eba5e24fc305345e2bf90cc4ee4f8feddf39",
+    "conv1_golden.txt": "b6abcfd835ea40230d05aae0fccd90ab8d8757fe2bd927c72913c13c2a44cc93",
+    "conv2_A.txt": "771e998547b350ef1727ca2b0e5d93fa9f7ad75a5e98681a7e6d5d9bb5c6778a",
+    "conv2_B.txt": "b77d0d2f4de72dfa68dd4202bc3e6082da3e1df8bb3f6fceea02648c2a55ea37",
+    "conv2_dims.txt": "4bcf4e86fc97dc0bf17a317969d268bf9168bcd9299f7469eaf273f3eb89f20d",
+    "conv2_golden.txt": "694d5098367e337f731340a0761ab2e8f549e3d8fbcf55337607769504889b98",
+    "dense1_A.txt": "51af6721de5683701d712d7e872e2ebd78b6c73e916f6d08d84dccaaeb9728c4",
+    "dense1_B.txt": "942794902cfa1a306c88830d4b25889b61c07b2a4ccbcdcfae513c10e2b3d2cc",
+    "dense1_dims.txt": "d1f746210ef76124b03234760fb7ad3965768eb5644fcc9d04ae057b5d473fc5",
+    "dense1_golden.txt": "45f24073f9d0f2b04680b2479af186e7e93671b467761b0246a1a68c8145d2cb",
+    "dense2_A.txt": "a7ab8f93df465c186693132cd4f904a84ed48c20468c723d25069b6b6cea0af6",
+    "dense2_B.txt": "ae7537b5a8043b10a97cfa8a0b5d6c311b16425aa053e79f6f6bee8a60c75ff7",
+    "dense2_dims.txt": "2804ce93cd8cd33021f4dda98bcec9d0884843a40680afa37204058fc40c17b4",
+    "dense2_golden.txt": "6216bdae04fb18d002da75d60037b512b80e1d0679497079f4a19eb717f1bd43",
+    "expected_pred_100.txt": "56bb69ffccf7b431a83314d5c1bb8d63cc0887e6b5e988460b2120c5508992a4",
+    "test_labels_100.txt": "af0b3dc63234e85b0fc9c64209805b22393bb374056f0c3ef1ec25115df6f72f"
+  },
+  "storage_normalization": "CRLF line endings converted to LF; all integer values are unchanged."
+}
