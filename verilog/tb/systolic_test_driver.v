@@ -30,8 +30,11 @@ module systolic_test_driver #(
             Bin=0;
             reset=1;
             #1;
-            if (C!=={16*ACC{1'b0}}||Aout!==0||Bout!==0)
-                $fatal(1, "Array asynchronous reset failed");
+            if (C!=={16*ACC{1'b0}}||Aout!==0||Bout!==0) begin
+                $display("FAIL: Array asynchronous reset failed");
+                $stop;
+                $finish;
+            end
             @(negedge clock);
             reset=0;
         end
@@ -41,14 +44,23 @@ module systolic_test_driver #(
         integer tr, tc, t, i, j, q, r, c, actual;
         integer expected [0:15];
         begin
-            if (m<1||m>MAX_M||k<1||k>MAX_K||n<1||n>MAX_N)
-                $fatal(1, "Unsupported dimensions %0dx%0dx%0d", m, k, n);
+            if (m<1||m>MAX_M||k<1||k>MAX_K||n<1||n>MAX_N) begin
+                $display("FAIL: Unsupported dimensions %0dx%0dx%0d", m, k, n);
+                $stop;
+                $finish;
+            end
             for (i=0; i<m*k; i=i+1)
-                if (a_mem[i]<-128||a_mem[i]>127)
-                    $fatal(1, "A[%0d] is outside signed int8", i);
+                if (a_mem[i]<-128||a_mem[i]>127) begin
+                    $display("FAIL: A[%0d] is outside signed int8", i);
+                    $stop;
+                    $finish;
+                end
             for (i=0; i<k*n; i=i+1)
-                if (b_mem[i]<-128||b_mem[i]>127)
-                    $fatal(1, "B[%0d] is outside signed int8", i);
+                if (b_mem[i]<-128||b_mem[i]>127) begin
+                    $display("FAIL: B[%0d] is outside signed int8", i);
+                    $stop;
+                    $finish;
+                end
             for (tr=0; tr<m; tr=tr+4) begin
                 for (tc=0; tc<n; tc=tc+4) begin
                     clear_array();
@@ -81,9 +93,12 @@ module systolic_test_driver #(
                                     expected[i*4+j]=expected[i*4+j]
                                         +a_mem[r*k+q]*b_mem[q*n+c];
                                 actual=$signed(C[(i*4+j)*ACC+:ACC]);
-                                if (actual!==expected[i*4+j])
-                                    $fatal(1, "MAC mismatch row=%0d col=%0d cycle=%0d got=%0d expected=%0d",
-                                        r, c, tile_cycles, actual, expected[i*4+j]);
+                                if (actual!==expected[i*4+j]) begin
+                                    $display("FAIL: MAC mismatch row=%0d col=%0d cycle=%0d got=%0d expected=%0d",
+                                    r, c, tile_cycles, actual, expected[i*4+j]);
+                                    $stop;
+                                    $finish;
+                                end
                             end
                         end
                         for (i=0; i<4; i=i+1) begin
@@ -91,13 +106,19 @@ module systolic_test_driver #(
                             actual=0;
                             if (tr+i<m&&q>=0&&q<k)
                                 actual=a_mem[(tr+i)*k+q];
-                            if ($signed(Aout[i*W+:W])!==actual)
-                                $fatal(1, "A boundary forwarding failed");
+                            if ($signed(Aout[i*W+:W])!==actual) begin
+                                $display("FAIL: A boundary forwarding failed");
+                                $stop;
+                                $finish;
+                            end
                             actual=0;
                             if (tc+i<n&&q>=0&&q<k)
                                 actual=b_mem[q*n+tc+i];
-                            if ($signed(Bout[i*W+:W])!==actual)
-                                $fatal(1, "B boundary forwarding failed");
+                            if ($signed(Bout[i*W+:W])!==actual) begin
+                                $display("FAIL: B boundary forwarding failed");
+                                $stop;
+                                $finish;
+                            end
                         end
                     end
                     // Discard padded lanes at the matrix boundaries.

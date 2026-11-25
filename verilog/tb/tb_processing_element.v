@@ -20,8 +20,11 @@ module tb_processing_element;
             Bin=0;
             expected=0;
             #1;
-            if (A!==0||B!==0||C!==0)
-                $fatal(1, "PE asynchronous reset failed");
+            if (A!==0||B!==0||C!==0) begin
+                $display("FAIL: PE asynchronous reset failed");
+                $stop;
+                $finish;
+            end
             @(negedge clock);
             reset=0;
         end
@@ -36,8 +39,11 @@ module tb_processing_element;
             expected=expected+a*b;
             @(posedge clock);
             #1;
-            if ($signed(A)!==a||$signed(B)!==b||$signed(C)!==expected)
-                $fatal(1, "PE failure a=%0d b=%0d C=%0d expected=%0d", a, b, C, expected);
+            if ($signed(A)!==a||$signed(B)!==b||$signed(C)!==expected) begin
+                $display("FAIL: PE failure a=%0d b=%0d C=%0d expected=%0d", a, b, C, expected);
+                $stop;
+                $finish;
+            end
         end
     endtask
 

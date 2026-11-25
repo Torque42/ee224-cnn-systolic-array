@@ -7,8 +7,9 @@ module tb_cnn;
     parameter NIMG=100;
 
     parameter DIR="testdata/cnn";
-    string data_dir;
-    integer ignored;
+    localparam PATH_BYTES=1024;
+    reg [8*PATH_BYTES-1:0] data_dir;
+    integer ignored, digit;
     integer histogram [0:9];
 
     reg clock, reset;
@@ -44,7 +45,7 @@ module tb_cnn;
 
     // Read exactly the declared matrix size; no trailing-EOF probe is needed.
     task load_file;
-        input string fname;
+        input [8*(PATH_BYTES+32)-1:0] fname;
         input integer count;
         input integer which;
 
@@ -55,7 +56,9 @@ module tb_cnn;
 
             if(fd==0) begin
                 $display("ERROR: Cannot open file %0s", fname);
-                $fatal(1, "CNN simulation failed");
+                $display("FAIL: CNN simulation failed");
+                $stop;
+                $finish;
             end
 
             for(i=0; i<count; i=i+1) begin
@@ -64,11 +67,16 @@ module tb_cnn;
                 if(rc!=1) begin
                     $display("ERROR while reading file at index %0d", i);
                     $fclose(fd);
-                    $fatal(1, "CNN simulation failed");
+                    $display("FAIL: CNN simulation failed");
+                    $stop;
+                    $finish;
                 end
 
-                if(which!=2&&(value<-128||value>127))
-                    $fatal(1, "Operand outside signed int8 range in %0s", fname);
+                if(which!=2&&(value<-128||value>127)) begin
+                    $display("FAIL: Operand outside signed int8 range in %0s", fname);
+                    $stop;
+                    $finish;
+                end
                 if(which==0)
                     A_mat[i]=value;
                 else if(which==1)
@@ -88,7 +96,7 @@ module tb_cnn;
         integer got;
         integer fd, rc;
 
-        string fname;
+        reg [8*(PATH_BYTES+32)-1:0] fname;
 
         begin
             $sformat(fname, "%0s/%0s_dims.txt", data_dir, name);
@@ -97,7 +105,9 @@ module tb_cnn;
 
             if(fd==0) begin
                 $display("ERROR: Cannot open dimensions file");
-                $fatal(1, "CNN simulation failed");
+                $display("FAIL: CNN simulation failed");
+                $stop;
+                $finish;
             end
 
             rc=$fscanf(fd, "%d %d %d", M, K, N);
@@ -105,14 +115,22 @@ module tb_cnn;
 
             if(rc!=3) begin
                 $display("ERROR: Invalid dimensions file");
-                $fatal(1, "CNN simulation failed");
+                $display("FAIL: CNN simulation failed");
+                $stop;
+                $finish;
             end
 
             if(M<=0||K<=0||N<=0||M%4!=0||N%4!=0||
-               M*K>700001||K*N>40001||M*N>600001)
-                $fatal(1, "Unsupported dimensions for %0s", name);
-            if(name=="dense2"&&(M!=NIMG||N<10||N>16))
-                $fatal(1, "Dense2 dimensions do not match the classifier");
+               M*K>700001||K*N>40001||M*N>600001) begin
+                $display("FAIL: Unsupported dimensions for %0s", name);
+                $stop;
+                $finish;
+            end
+            if(name=="dense2"&&(M!=NIMG||N<10||N>16)) begin
+                $display("FAIL: Dense2 dimensions do not match the classifier");
+                $stop;
+                $finish;
+            end
 
             $sformat(fname, "%0s/%0s_A.txt", data_dir, name);
             load_file(fname, M*K, 0);
@@ -220,7 +238,7 @@ module tb_cnn;
             $dumpfile("tb_cnn.vcd");
             $dumpvars(0, tb_cnn);
         end
-        for(integer digit=0; digit<10; digit=digit+1) histogram[digit]=0;
+        for(digit=0; digit<10; digit=digit+1) histogram[digit]=0;
 
         total_errors=0;
         total_cycles=0;
@@ -238,7 +256,7 @@ module tb_cnn;
             integer best, bestv;
             integer correct, agree;
 
-            string fname;
+            reg [8*(PATH_BYTES+32)-1:0] fname;
 
             $sformat(fname, "%0s/b_dense2.txt", data_dir);
 
@@ -246,12 +264,18 @@ module tb_cnn;
 
             if(fd==0) begin
                 $display("ERROR: Cannot open dense2 bias file");
-                $fatal(1, "CNN simulation failed");
+                $display("FAIL: CNN simulation failed");
+                $stop;
+                $finish;
             end
 
             for(i=0; i<10; i=i+1) begin
                 rc=$fscanf(fd, "%d", bias2[i]);
-                if(rc!=1) $fatal(1, "Missing Dense2 bias at index %0d", i);
+                if(rc!=1) begin
+                    $display("FAIL: Missing Dense2 bias at index %0d", i);
+                    $stop;
+                    $finish;
+                end
             end
 
             $fclose(fd);
@@ -262,18 +286,26 @@ module tb_cnn;
 
             if(fd==0) begin
                 $display("ERROR: Cannot open labels file");
-                $fatal(1, "CNN simulation failed");
+                $display("FAIL: CNN simulation failed");
+                $stop;
+                $finish;
             end
 
             for(i=0; i<NIMG; i=i+1) begin
                 rc=$fscanf(fd, "%d", labels[i]);
-                if(rc!=1||labels[i]<0||labels[i]>9)
-                    $fatal(1, "Invalid label at image %0d", i);
+                if(rc!=1||labels[i]<0||labels[i]>9) begin
+                    $display("FAIL: Invalid label at image %0d", i);
+                    $stop;
+                    $finish;
+                end
                 histogram[labels[i]]=histogram[labels[i]]+1;
             end
             for(i=0; i<10; i=i+1)
-                if(histogram[i]!=NIMG/10||NIMG%10!=0)
-                    $fatal(1, "Unbalanced label count for digit %0d", i);
+                if(histogram[i]!=NIMG/10||NIMG%10!=0) begin
+                    $display("FAIL: Unbalanced label count for digit %0d", i);
+                    $stop;
+                    $finish;
+                end
 
             $fclose(fd);
 
@@ -283,13 +315,18 @@ module tb_cnn;
 
             if(fd==0) begin
                 $display("ERROR: Cannot open predictions file");
-                $fatal(1, "CNN simulation failed");
+                $display("FAIL: CNN simulation failed");
+                $stop;
+                $finish;
             end
 
             for(i=0; i<NIMG; i=i+1) begin
                 rc=$fscanf(fd, "%d", expect_pred[i]);
-                if(rc!=1||expect_pred[i]<0||expect_pred[i]>9)
-                    $fatal(1, "Invalid reference prediction at image %0d", i);
+                if(rc!=1||expect_pred[i]<0||expect_pred[i]>9) begin
+                    $display("FAIL: Invalid reference prediction at image %0d", i);
+                    $stop;
+                    $finish;
+                end
             end
 
             $fclose(fd);
@@ -344,8 +381,11 @@ module tb_cnn;
             );
 
             $display("================================================");
-            if(total_errors!=0||agree!=NIMG)
-                $fatal(1, "CNN results differ from the integer reference");
+            if(total_errors!=0||agree!=NIMG) begin
+                $display("FAIL: CNN results differ from the integer reference");
+                $stop;
+                $finish;
+            end
         end
 
         $display("PASS: all CNN matrix products and predictions match the integer reference");

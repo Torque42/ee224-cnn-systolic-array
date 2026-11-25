@@ -1,4 +1,4 @@
-# Implementing Convolutional Neural Network Inference Through a 4×4 Systolic Array
+# Implementing Convolutional Neural Network Inference Through a 4×4 Systolic Array in Verilog
 
 EE224 Digital Systems — Course Project, Semester 3, 2026–2027.
 
@@ -76,7 +76,7 @@ The notebook prepares input matrices for all 100 images together. Each hidden-la
 | Dense1 | 100×250 | 250×128 | 800 |
 | Dense2 | 100×128 | 128×12 | 75 |
 
-The 19 matching integer export files used by the recorded run are included in `testdata/cnn/`. The manifest records the source commit, original and normalized file hashes, dimensions, and expected results. Only Windows line endings were normalized; all integer values are unchanged. The restored `tb_cnn.sv` retains the teammate's batch schedule and classification procedure, with portable file paths, input checks, and nonzero failure exits.
+The 19 matching integer export files used by the recorded run are included in `testdata/cnn/`. The manifest records the source commit, original and normalized file hashes, dimensions, and expected results. Only Windows line endings were normalized; all integer values are unchanged. The restored `tb_cnn.v` retains the teammate's batch schedule and classification procedure, with portable file paths and input checks.
 
 ### Verified CNN results
 
@@ -104,10 +104,10 @@ verilog/
     processing_element.v
     systolic_array.v
     tb/
-        systolic_test_driver.sv
-        tb_processing_element.sv
-        tb_systolic_array.sv
-        tb_cnn.sv
+        systolic_test_driver.v
+        tb_processing_element.v
+        tb_systolic_array.v
+        tb_cnn.v
 testdata/
     cnn/
         manifest.json
@@ -118,31 +118,31 @@ report/
 
 `ProcessingElement` is defined once in `processing_element.v`. The structural array instantiates that module sixteen times. Only the compiled PDF is tracked under `report/`; the LaTeX sources and figure-generation files are retained locally.
 
-## Running the implementation
+## Running the Verilog simulations
 
-The hardware checks require Icarus Verilog (`iverilog` and `vvp`). Run from the repository root:
+The RTL and testbenches use Verilog-2001. The commands below require Icarus Verilog (`iverilog` and `vvp`) and run from the repository root:
 
 ```sh
 mkdir -p build
-iverilog -g2012 -Wall -s tb_processing_element -o build/pe.vvp verilog/processing_element.v verilog/tb/tb_processing_element.sv
-vvp build/pe.vvp +VCD
-iverilog -g2012 -Wall -s tb_systolic_array -o build/array.vvp verilog/processing_element.v verilog/systolic_array.v verilog/tb/systolic_test_driver.sv verilog/tb/tb_systolic_array.sv
-vvp build/array.vvp +VCD
-iverilog -g2012 -Wall -s tb_cnn -o build/cnn.vvp verilog/processing_element.v verilog/systolic_array.v verilog/tb/tb_cnn.sv
-vvp build/cnn.vvp
+iverilog -g2001 -Wall -s tb_processing_element -o build/pe.vvp verilog/processing_element.v verilog/tb/tb_processing_element.v
+vvp -N build/pe.vvp +VCD
+iverilog -g2001 -Wall -s tb_systolic_array -o build/array.vvp verilog/processing_element.v verilog/systolic_array.v verilog/tb/systolic_test_driver.v verilog/tb/tb_systolic_array.v
+vvp -N build/array.vvp +VCD
+iverilog -g2001 -Wall -s tb_cnn -o build/cnn.vvp verilog/processing_element.v verilog/systolic_array.v verilog/tb/tb_cnn.v
+vvp -N build/cnn.vvp
 ```
 
-All three benches print PASS on success and exit with an error on invalid data or a failed comparison. CNN inference uses `testdata/cnn/` by default, so no Python installation or retraining is required to reproduce the fixed test. `+DATA_DIR=/path/to/export` selects another export directory. `+VCD` enables optional waveform recording; CNN traces can be large.
+All three benches print PASS on success. Invalid data or a failed comparison prints FAIL and invokes the standard Verilog `$stop` task. The `vvp -N` option makes this exit with a nonzero status; the ModelSim commands below use `onbreak` for the same purpose. CNN inference uses `testdata/cnn/` by default, so no Python installation or retraining is required to reproduce the fixed test. `+DATA_DIR=/path/to/export` selects another export directory. Directory names are stored in 1024-byte packed vectors. `+VCD` enables optional waveform recording; CNN traces can be large.
 
 For ModelSim/Questa:
 
 ```tcl
 vlib work
 vlog verilog/processing_element.v verilog/systolic_array.v
-vlog -sv verilog/tb/systolic_test_driver.sv verilog/tb/tb_processing_element.sv verilog/tb/tb_systolic_array.sv verilog/tb/tb_cnn.sv
-vsim -c work.tb_processing_element -do "run -all; quit -f"
-vsim -c work.tb_systolic_array -do "run -all; quit -f"
-vsim -c work.tb_cnn -do "run -all; quit -f"
+vlog verilog/tb/systolic_test_driver.v verilog/tb/tb_processing_element.v verilog/tb/tb_systolic_array.v verilog/tb/tb_cnn.v
+vsim -c work.tb_processing_element -do "onbreak {quit -code 1 -f}; run -all; quit -f"
+vsim -c work.tb_systolic_array -do "onbreak {quit -code 1 -f}; run -all; quit -f"
+vsim -c work.tb_cnn -do "onbreak {quit -code 1 -f}; run -all; quit -f"
 ```
 
 To train and export a new model, run the three cells in `python/cnn_part1.ipynb` in order with TensorFlow, NumPy, Matplotlib, and a notebook environment. The export is written to `modelsim_data/` relative to the notebook working directory. A new stochastic training run can produce a different accuracy; its matrices, biases, labels, and predictions must be used together. The separate PyTorch implementation requires PyTorch, torchvision, and Matplotlib.

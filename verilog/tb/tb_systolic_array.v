@@ -18,8 +18,11 @@ module tb_systolic_array;
                     expected=0;
                     for (q=0; q<k; q=q+1)
                         expected=expected+driver.a_mem[r*k+q]*driver.b_mem[q*n+c];
-                    if (driver.c_mem[r*n+c]!==expected)
-                        $fatal(1, "Final matrix mismatch at (%0d,%0d)", r, c);
+                    if (driver.c_mem[r*n+c]!==expected) begin
+                        $display("FAIL: Final matrix mismatch at (%0d,%0d)", r, c);
+                        $stop;
+                        $finish;
+                    end
                 end
             end
             $display("PASS: %0dx%0d * %0dx%0d; %0d active cycles per tile (reset excluded)",
