@@ -9,9 +9,11 @@ module ProcessingElement #(
     output reg signed [W_accum-1:0] C
 );
 
+    // Preserve the full signed product before accumulation.
     wire signed [2*W-1:0] product=Ain*Bin;
     always @(posedge clock, posedge reset)
     begin
+        // Reset clears the forwarded operands and starts a new dot product.
         if (reset==1'b1)
         begin
             A<={W{1'b0}};
@@ -21,6 +23,7 @@ module ProcessingElement #(
 
         else
         begin
+            // Forward the inputs and accumulate their product on this edge.
             A<=Ain;
             B<=Bin;
             C<=C+product;

@@ -40,6 +40,7 @@ module tb_cnn_inference;
         end
     endtask
 
+    // Restore the activation scale, then apply ReLU and int8 saturation.
     function automatic integer activate(input integer value);
         integer shifted;
         begin
@@ -54,6 +55,7 @@ module tb_cnn_inference;
     task automatic check_golden(input integer handle, m, n, input string layer);
         integer r, c, expected, actual, padded_n;
         begin
+            // Notebook goldens pad output columns to a multiple of four.
             padded_n=((n+3)/4)*4;
             for (r=0; r<m; r=r+1) begin
                 for (c=0; c<padded_n; c=c+1) begin
@@ -72,6 +74,7 @@ module tb_cnn_inference;
         integer r, c, kr, kc, ch, dy, dx, value, maximum;
         begin
 
+            // Match the kernel-row, kernel-column, channel order used by Keras.
             for (r=0; r<26; r=r+1)
                 for (c=0; c<26; c=c+1)
                     for (kr=0; kr<3; kr=kr+1)
@@ -97,6 +100,7 @@ module tb_cnn_inference;
     task automatic conv2;
         integer r, c, kr, kc, ch, dy, dx, value, maximum;
         begin
+            // Build this layer from the preceding DUT results after pooling.
             for (r=0; r<11; r=r+1)
                 for (c=0; c<11; c=c+1)
                     for (kr=0; kr<3; kr=kr+1)
@@ -152,6 +156,7 @@ module tb_cnn_inference;
             histogram[labels[i]]=histogram[labels[i]]+1;
         end
         close_data(fd);
+        // Require a balanced set with ten test images per digit.
         for (i=0; i<10; i=i+1)
             if (histogram[i]!=10) $fatal(1, "Expected exactly 10 samples of digit %0d", i);
         fd=open_data("expected_pred_100.txt");

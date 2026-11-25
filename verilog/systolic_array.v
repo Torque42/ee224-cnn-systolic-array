@@ -9,10 +9,12 @@ module systolic_array #(
     output wire [4*W-1:0] A, B,
     output wire [16*W_accum-1:0] C
 );
+    // Registered PE outputs carry A rightward and B downward.
     wire [W-1:0] a_ij [0:3][0:4];
     wire [W-1:0] b_ij [0:4][0:3];
     genvar i, j;
     generate
+        // Each packed input lane feeds one boundary row or column.
         for (i=0; i<4; i=i+1) begin : boundary_a
             assign a_ij[i][0]=Ain[W*i+:W];
             assign A[W*i+:W]=a_ij[i][4];
@@ -21,6 +23,7 @@ module systolic_array #(
             assign b_ij[0][j]=Bin[W*j+:W];
             assign B[W*j+:W]=b_ij[4][j];
         end
+        // One PE per output entry; pack accumulators in row-major order.
         for (i=0; i<4; i=i+1) begin : row
             for (j=0; j<4; j=j+1) begin : col
                 ProcessingElement #(.W(W), .W_accum(W_accum)) pe (

@@ -14,6 +14,7 @@ module tb_systolic_array;
             driver.matmul(m, k, n);
             for (r=0; r<m; r=r+1) begin
                 for (c=0; c<n; c=c+1) begin
+                    // Scalar reference calculation, independent of input skew.
                     expected=0;
                     for (q=0; q<k; q=q+1)
                         expected=expected+driver.a_mem[r*k+q]*driver.b_mem[q*n+c];
@@ -31,8 +32,9 @@ module tb_systolic_array;
             $dumpfile("tb_systolic_array.vcd");
             $dumpvars(0, tb_systolic_array);
         end
-        run_case(4, 4, 4, 1, 0);
-        run_case(4, 8, 4, 9, 0);
+        run_case(4, 4, 4, 1, 0); // B(i): 10 active edges.
+        run_case(4, 8, 4, 9, 0); // B(ii): 14 active edges.
+        // Further cases check reset, partial tiles, and CNN inner dimensions.
         run_case(4, 8, 4, 1, 1);
         run_case(5, 9, 5, 13, 0);
         run_case(4, 45, 10, 3, 0);

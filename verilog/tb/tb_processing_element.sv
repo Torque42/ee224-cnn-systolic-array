@@ -27,6 +27,7 @@ module tb_processing_element;
         end
     endtask
 
+    // Drive on a falling edge and check after the next rising-edge update.
     task automatic step(input integer a, b);
         begin
             @(negedge clock);
@@ -51,6 +52,7 @@ module tb_processing_element;
         step(-128,-128);
         step(127,-128);
         step(0, 127);
+        // Reset a nonzero sum, then exercise the longest CNN dot-product length.
         clear_pe();
         for (i=0; i<250; i=i+1) step(-128,-128);
         clear_pe();

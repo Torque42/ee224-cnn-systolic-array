@@ -10,6 +10,7 @@ module systolic_test_driver #(
     reg [4*W-1:0] Ain=0, Bin=0;
     wire [4*W-1:0] Aout, Bout;
     wire [16*ACC-1:0] C;
+    // Matrices are row-major; c_mem receives only DUT output values.
     integer a_mem [0:MAX_M*MAX_K-1];
     integer b_mem [0:MAX_K*MAX_N-1];
     integer c_mem [0:MAX_M*MAX_N-1];
@@ -21,6 +22,7 @@ module systolic_test_driver #(
         .A(Aout), .B(Bout), .C(C)
     );
 
+    // Clear the previous tile before starting a new matrix product.
     task automatic clear_array;
         begin
             @(negedge clock);
@@ -53,11 +55,13 @@ module systolic_test_driver #(
                     for (i=0; i<16; i=i+1) expected[i]=0;
                     tile_cycles=0;
 
+                    // Allow K+6 active edges, excluding reset and setup.
                     for (t=0; t<k+6; t=t+1) begin
                         @(negedge clock);
                         Ain=0;
                         Bin=0;
                         for (i=0; i<4; i=i+1) begin
+                            // Skew row i and column i by i cycles.
                             q=t-i;
                             if (tr+i<m&&q>=0&&q<k)
                                 Ain[i*W+:W]=a_mem[(tr+i)*k+q];
@@ -65,8 +69,9 @@ module systolic_test_driver #(
                                 Bin[i*W+:W]=b_mem[q*n+tc+i];
                         end
                         @(posedge clock);
-                        #1;
+                        #1; // Sample after nonblocking register updates settle.
                         tile_cycles=tile_cycles+1;
+                        // Check partial sums against independent scalar products.
                         for (i=0; i<4; i=i+1) begin
                             for (j=0; j<4; j=j+1) begin
                                 r=tr+i;
@@ -74,7 +79,7 @@ module systolic_test_driver #(
                                 q=t-i-j;
                                 if (r<m&&c<n&&q>=0&&q<k)
                                     expected[i*4+j]=expected[i*4+j]
-+a_mem[r*k+q]*b_mem[q*n+c];
+                                        +a_mem[r*k+q]*b_mem[q*n+c];
                                 actual=$signed(C[(i*4+j)*ACC+:ACC]);
                                 if (actual!==expected[i*4+j])
                                     $fatal(1, "MAC mismatch row=%0d col=%0d cycle=%0d got=%0d expected=%0d",
@@ -95,6 +100,7 @@ module systolic_test_driver #(
                                 $fatal(1, "B boundary forwarding failed");
                         end
                     end
+                    // Discard padded lanes at the matrix boundaries.
                     for (i=0; i<4; i=i+1)
                         for (j=0; j<4; j=j+1)
                             if (tr+i<m&&tc+j<n)

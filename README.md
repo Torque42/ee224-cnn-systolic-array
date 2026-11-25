@@ -2,7 +2,7 @@
 
 EE224 Digital Systems — Course Project, Semester 1, 2026–2027.
 
-This project implements a signed multiply-and-accumulate processing element and connects sixteen instances into a structural 4×4 systolic array. The array is used for matrix multiplication and for the convolutional and fully connected layers of an MNIST classifier. The [project report](report/Project%20Report.pdf) contains the derivations, numerical results, simulation waveforms, and source listings.
+This project implements a signed multiply-and-accumulate processing element and connects sixteen instances into a structural 4×4 systolic array. The array is used for matrix multiplication and for the convolutional and fully connected layers of an MNIST classifier. The [project report](report/Project%20Report%20-%20Ayush%20Agrawal%20-%20Rajveer%20Singh%20Choudhary%20-%20Atharva%20Airen.pdf) contains the derivations, numerical results, simulation waveforms, and source listings.
 
 ## Contributors
 
@@ -110,7 +110,7 @@ verilog/
         tb_systolic_array.sv
         tb_cnn_inference.sv
 report/
-    Project Report.pdf
+    Project Report - Ayush Agrawal - Rajveer Singh Choudhary - Atharva Airen.pdf
 ```
 
 `ProcessingElement` is defined once in `processing_element.v`. The structural array instantiates that module sixteen times. Only the compiled PDF is tracked under `report/`; the LaTeX sources and figure-generation files are retained locally.
