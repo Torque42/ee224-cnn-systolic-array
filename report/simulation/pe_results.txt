@@ -1,3 +1,0 @@
-VCD info: dumpfile tb_processing_element.vcd opened for output.
-PASS: PE forwarding, signed MAC, reset, 250-term accumulation
-verilog/tb/tb_processing_element.sv:59: $finish called at 5116000 (1ps)

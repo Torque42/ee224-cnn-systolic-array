@@ -9,3 +9,7 @@ data/
 build/
 modelsim_data/
 python/modelsim_data/
+
+/report/*
+!/report/Project Report.pdf
+/project.zip

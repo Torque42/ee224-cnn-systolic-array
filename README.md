@@ -27,7 +27,6 @@ Rows and columns enter the array with staggered starts. A full output tile with 
 
 ```text
 README.md
-project.zip
 python/
     cnn_part1.ipynb
     main.py
@@ -42,19 +41,10 @@ verilog/
         tb_systolic_array.sv
         tb_cnn_inference.sv
 report/
-    ee224_report.tex
-    EE224_Ayush_Agrawal_Rajveer_Singh_Choudhary_Atharva_Airen.pdf
-    figures/
-    simulation/
-        collect_evidence.py
-        pe_results.txt
-        array_results.txt
-        results.json
+    Project Report.pdf
 ```
 
-`project.zip` is the original teammate-provided Quartus/ModelSim project archive, including its notebook and exported matrices. It is preserved as received; the active source files are under `python/` and `verilog/`.
-
-The report contains answers to each question, derivations, accuracy plots, numerical examples, waveforms, supplied ModelSim screenshots, and source listings. It includes all three names and roll numbers on the first page and all names in the PDF filename.
+The report contains answers to each question, derivations, accuracy plots, numerical examples, waveforms, supplied ModelSim screenshots, and source listings. It includes all three names and roll numbers on the first page. The PDF is available as [Project Report.pdf](report/Project%20Report.pdf). Only the compiled report is tracked; its LaTeX sources, figures, and report-generation files are kept locally.
 
 ## Recorded results
 
@@ -103,7 +93,7 @@ iverilog -g2012 -Wall -s tb_cnn_inference -o build/cnn.vvp verilog/processing_el
 vvp build/cnn.vvp +DATA_DIR=python/modelsim_data
 ```
 
-The CNN bench needs raw images, all weights and biases, labels, reference predictions, and four golden matrix files from the same export. The older archive alone lacks some raw inputs needed by this local bench, so regenerate them with the updated notebook. The bench requires ten images per digit, checks matrix results against the reference, and reports accuracy against ground-truth labels.
+The CNN bench needs raw images, all weights and biases, labels, reference predictions, and four golden matrix files from the same export. Generate all required inputs with the updated notebook before running this bench. The bench requires ten images per digit, checks matrix results against the reference, and reports accuracy against ground-truth labels.
 
 ## ModelSim / Questa
 
@@ -117,15 +107,3 @@ vsim -c work.tb_processing_element -do "run -all; quit -f"
 vsim -c work.tb_systolic_array -do "run -all; quit -f"
 vsim -c work.tb_cnn_inference +DATA_DIR=python/modelsim_data -do "run -all; quit -f"
 ```
-
-## Rebuild the report
-
-LaTeX needs the standard geometry, mathptmx, microtype, amsmath, amssymb, booktabs, graphicx, listings, TikZ, caption, and hyperref packages. Source listings are imported directly from the current Verilog files.
-
-```sh
-cd report
-pdflatex -interaction=nonstopmode -halt-on-error -jobname=EE224_Ayush_Agrawal_Rajveer_Singh_Choudhary_Atharva_Airen ee224_report.tex
-pdflatex -interaction=nonstopmode -halt-on-error -jobname=EE224_Ayush_Agrawal_Rajveer_Singh_Choudhary_Atharva_Airen ee224_report.tex
-```
-
-After running A and B with `+VCD`, `python3 report/simulation/collect_evidence.py` from the repository root checks the recorded PE values, final matrices, and completion edges. It also generates the waveform LaTeX sources used by the report.
