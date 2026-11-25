@@ -6,3 +6,6 @@ data/
 *.pt
 *.vcd
 *.vvp
+build/
+modelsim_data/
+python/modelsim_data/
